@@ -1,13 +1,9 @@
 import Typography from '@mui/material/Typography';
 
-import { _tasks, _posts, _timeline } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-
 import { useEffect, useState } from 'react';
 import { fetchStockData } from 'src/services';
 import { AnalyticsStockPrice } from '../analytics-stock-price';
-
-// ----------------------------------------------------------------------
 
 interface StockData {
     opening: number[];
@@ -15,13 +11,22 @@ interface StockData {
 }
 
 export function StockPricesView() {
-
     const [stockData, setStockData] = useState<StockData>({ opening: [], closing: [] });
 
     useEffect(() => {
         const getData = async () => {
-            const data = fetchStockData();
-            setStockData(data);
+            try {
+                const rawData = await fetchStockData();
+
+                const formattedData: StockData = {
+                    opening: rawData.map(entry => entry.opening),
+                    closing: rawData.map(entry => entry.closing),
+                };
+
+                setStockData(formattedData);
+            } catch (error) {
+                console.error("Error fetching stock data:", error);
+            }
         };
 
         getData();
@@ -33,7 +38,6 @@ export function StockPricesView() {
                 Pricing report
             </Typography>
 
-
             <AnalyticsStockPrice
                 title="Stock price"
                 subheader="AAPL (Apple) end-of-day stock prices"
@@ -41,12 +45,10 @@ export function StockPricesView() {
                     categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     series: [
                         { name: 'Opening', data: stockData.opening },
-                        { name: 'Closing', data: stockData.opening },
+                        { name: 'Closing', data: stockData.closing },
                     ],
                 }}
             />
-
-
         </DashboardContent>
     );
 }
